@@ -7,6 +7,7 @@
 #include <cassert>
 #include <iomanip>
 #include <fstream>
+#include <limits>
 
 #include "ClusteringTests.h"
 #include "Point.h"
@@ -499,7 +500,7 @@ void test_point_comparison(ErrorContext &ec, unsigned int numRuns) {
     }
 }
 
-// operator+=, operator-=, operator*=, operator/=
+ //operator+=, operator-=, operator*=, operator/=
 void test_point_CAO(ErrorContext &ec, unsigned int numRuns) {
     bool pass;
 
@@ -586,7 +587,7 @@ void test_point_CAO(ErrorContext &ec, unsigned int numRuns) {
     }
 }
 
-// operator+, operator-, operator*, operator/
+ //operator+, operator-, operator*, operator/
 void test_point_SAO(ErrorContext &ec, unsigned int numRuns) {
     bool pass;
 
@@ -988,7 +989,7 @@ void test_cluster_copying(ErrorContext &ec, unsigned int numRuns) {
     }
 }
 
-// operator=
+//// operator=
 void test_cluster_assignment(ErrorContext &ec, unsigned int numRuns) {
     bool pass;
 

@@ -11,8 +11,9 @@ namespace Clustering {
 
         Point point;
         LNodePtr next;
-        LNode(const Point &p, LNodePtr n);
 
+        LNode(const Point &p, LNodePtr n)
+        : point(p), next(n){}
     };
 
     class Cluster {
@@ -21,16 +22,20 @@ namespace Clustering {
         LNodePtr __points;
 
         void __del();
+
         void __cpy(LNodePtr pts);
+
         bool __in(const Point &p) const;
 
 
     public:
-        Cluster();
+        Cluster() : __size(0), __points(NULL) {}
 
         // The big three: cpy ctor, overloaded operator=, dtor
         Cluster(const Cluster &);
+
         Cluster &operator=(const Cluster &);
+
         ~Cluster();
 
         // Getters/setters
@@ -39,6 +44,7 @@ namespace Clustering {
         // Set functions: They allow calling c1.add(c2.remove(p));
         void add(const Point &); // TODO add asc order to the requirements
         const Point &remove(const Point &);
+
         bool contains(const Point &);
 
         // Overloaded operators
@@ -48,6 +54,7 @@ namespace Clustering {
 
         // Members: Compound assignment (Point argument)
         Cluster &operator+=(const Point &);
+
         Cluster &operator-=(const Point &);
 
         // Members: Compound assignment (Cluster argument)
@@ -56,14 +63,17 @@ namespace Clustering {
 
         // Friends: IO
         friend std::ostream &operator<<(std::ostream &, const Cluster &);
+
         friend std::istream &operator>>(std::istream &, Cluster &);
 
         // Friends: Comparison
         friend bool operator==(const Cluster &, const Cluster &);
+
         friend bool operator!=(const Cluster &, const Cluster &);
 
         // Friends: Arithmetic (Cluster and Point)
         friend const Cluster operator+(const Cluster &, const Point &);
+
         friend const Cluster operator-(const Cluster &, const Point &);
 
         // Friends: Arithmetic (two Clusters)
@@ -71,6 +81,6 @@ namespace Clustering {
         friend const Cluster operator-(const Cluster &, const Cluster &); // (asymmetric) difference
 
     };
-
 }
+
 #endif //CLUSTERING_CLUSTER_H
