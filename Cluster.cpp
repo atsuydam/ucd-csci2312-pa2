@@ -46,7 +46,19 @@ namespace Clustering {
 
     Cluster::~Cluster()
     {
+        LNodePtr cursor = __points;
+        LNodePtr nextPnt;
 
+        while (cursor != NULL)
+        {
+            nextPnt = cursor->next;
+            delete cursor;
+            cursor = nextPnt;
+            if (nextPnt != NULL)
+            {
+                nextPnt = nextPnt->next;
+            }
+        }
     }
 
     void Cluster::__del()
@@ -99,7 +111,6 @@ namespace Clustering {
 
             if (prev == NULL)
             {
-
                 __points = newPnt;
                 newPnt->next = cursor;
             }
@@ -113,11 +124,58 @@ namespace Clustering {
         __size++;
     }
 
-    const Point &Cluster::remove(const Point &) {
+    const Point &Cluster::remove(const Point &p)
+    {
+        LNodePtr cursor;
+        LNodePtr prevPtr = __points;
 
+        // empty list
+        if (__points == NULL)
+            return p;
+
+        // head of list
+        if (__points->point == p)
+        {
+            cursor = __points->next;
+            delete __points;
+            __points = cursor;
+        }
+
+        // anywhere else
+        else
+        {
+           cursor = __points;
+            while (cursor != NULL && cursor->point != p)
+            {
+                prevPtr = cursor;
+                cursor = cursor->next;
+            }
+            if (cursor->point == p)
+            {
+                prevPtr->next = cursor->next;
+                delete cursor;
+            }
+            else
+            {
+                cout << "That point wasn't found in the linked list" << endl;
+            }
+        }
+        __size--;
+        return p;
     }
 
-    bool Cluster:: contains(const Point &){
+    bool Cluster:: contains(const Point &theWantedOne) // I'm getting tired of p
+    {
+        bool answer = false;
+        LNodePtr cursor = __points;
+
+        for (cursor = __points; cursor != NULL; cursor = cursor->next)
+        {
+            if (cursor->point == theWantedOne)
+                answer = true;
+        }
+        return answer;
+
 
     }
 
@@ -144,12 +202,13 @@ namespace Clustering {
     {
         LNodePtr cursor = __points;
         cursor->point += more;
+        __size++;
     }
 
     Cluster &Cluster::operator-=(const Point &less)
     {
-        LNodePtr cursor = __points;
-        cursor->point -= less;
+        remove(less);
+        __size--;
     }
 
 // Members: Compound assignment (Cluster argument)
@@ -204,7 +263,8 @@ namespace Clustering {
     }
 
 // Friends: Arithmetic (Cluster and Point)
-    const Cluster operator+(const Cluster &, const Point &) {
+    const Cluster operator+(const Cluster &, const Point &)
+    {
 
     }
 

@@ -1,5 +1,7 @@
 #include <iostream>
 #include <sstream>
+#include <cmath>
+#include <fstream>
 #include "Point.h"
 #include "Cluster.h"
 
@@ -86,6 +88,7 @@ namespace Clustering {
     double Point::distanceTo(const Point &rhs) const
     {
         double distance = 0;
+        double squared;
         int size;
         size = rhs.__dim;
         for (int i=0; i<size; i++)
@@ -94,16 +97,13 @@ namespace Clustering {
             {
                 distance += 0;
             }
-            else if (rhs.__values[i] > __values[i])
+            else //(rhs.__values[i] > __values[i])
             {
-                distance = rhs.__values[i] - __values[i];
-            }
-            else
-            {
-                distance = rhs.__values[0];
-                distance += __values[i] - rhs.__values[i];
+                squared = rhs.__values[i] - __values[i];
+                distance += squared * squared;
             }
         }
+        distance = sqrt(distance);
         return distance;
     }
 
@@ -261,6 +261,8 @@ namespace Clustering {
             {
                 answer = true;
             }
+            if ( lhs.__values[i] < rhs.__values[i])
+                return false;
 
         }
         return answer;
@@ -297,16 +299,31 @@ namespace Clustering {
 
     std::ostream &operator<<(std::ostream &out, const Point &p)
     {
-        int i=0;
-        for ( ; i < p.__dim; i++)
-            cout << p.__values[i] << ' ';
+        ofstream dataOut;
+        dataOut.open("point.csv", ios::out);
+        if (!dataOut)
+            cout << "Error opening file" << endl;
+
+        for (int i=0; i < p.__dim; i++)
+            dataOut << p.__values[i] << ' ';
+        dataOut.close();
         return out;
     }
 
     std::istream &operator>>(std::istream &in, Point &p)
     {
-        for (int i=0; i < p.__dim; i++)
-            in >> p.__values[i];
+        double point;
+        ifstream dataIn;
+        dataIn.open("points.csv", ios::in);
+        if (!dataIn)
+            cout << "Error opening file" << endl;
+
+        while (dataIn)
+        {
+            dataIn >> point;
+        }
+        dataIn.close();
+
         return in;
     }
 }
