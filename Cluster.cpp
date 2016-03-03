@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <cassert>
 #include "Cluster.h"
@@ -7,31 +8,39 @@ using namespace std;
 
 
 namespace Clustering {
-
-// The big three: cpy ctor, overloaded operator=, dtor
+    // The big three: cpy ctor, overloaded operator=, dtor
     Cluster::Cluster(const Cluster &rhs)
             : __size(rhs.__size)
     {
-        __cpy(rhs.__points);
+        if (__points != NULL)
+            __del();
+        LNodePtr cursor = rhs.__points;
+        this->__size = 0;
+
+        while (cursor != NULL)
+        {
+            this->add(cursor->point);
+            cursor = cursor->next;
+        }
     }
 
     Cluster &Cluster::operator=(const Cluster &rhs)
     {
-       if (*this == rhs)
-           return *this;
+        if (*this == rhs)
+            return *this;
         else
-       {
-           LNodePtr cursor = __points;
-           LNodePtr nextPnt;
+        {
+            LNodePtr cursor = __points;
+            LNodePtr nextPnt;
 
-           while ( cursor != NULL )
-           {
-               nextPnt = cursor->next;
-               delete cursor;
-               cursor = nextPnt;
-               __size--;
-           }
-       }
+            while ( cursor != NULL )
+            {
+                nextPnt = cursor->next;
+                delete cursor;
+                cursor = nextPnt;
+                __size--;
+            }
+        }
 
         LNodePtr rhsPtr = rhs.__points;
         for (int i=0; i<rhs.getSize(); i++)
@@ -63,12 +72,26 @@ namespace Clustering {
 
     void Cluster::__del()
     {
+        if (__size != 0)
+        {
+            LNodePtr cursor = __points;
+            delete cursor;
+        }
+        __points = NULL;
+        __size = 0;
 
     }
 
     void Cluster:: __cpy(LNodePtr pts)
     {
+        LNodePtr cursor = pts;
+        this->__size = 0;
 
+        while (cursor != NULL)
+        {
+            this->add(cursor->point);
+            cursor = cursor->next;
+        }
     }
 
     bool Cluster::__in(const Point &p) const
@@ -93,10 +116,21 @@ namespace Clustering {
         // Check to see if this will be the first node in the list
         if (__points == NULL)
         {
+            assert(__size == 0);
             __points = newPnt;
             newPnt->next = NULL;
         }
-        // Or add another node to the existing list
+
+            // Replace the head point if p is smaller
+        else if (__points->point > p)
+        {
+            cursor->point = __points->point;
+            __points->point = p;
+            __points->next = cursor;
+            cursor->next = NULL;
+        }
+
+            // Or add another node to the existing list
         else
         {
             cursor = __points;
@@ -141,10 +175,10 @@ namespace Clustering {
             __points = cursor;
         }
 
-        // anywhere else
+            // anywhere else
         else
         {
-           cursor = __points;
+            cursor = __points;
             while (cursor != NULL && cursor->point != p)
             {
                 prevPtr = cursor;
@@ -212,22 +246,40 @@ namespace Clustering {
     }
 
 // Members: Compound assignment (Cluster argument)
-    Cluster &Cluster::operator+=(const Cluster &) // union
+    Cluster &Cluster::operator+=(const Cluster &second) // union
     {
-
+        LNodePtr cursor = second.__points;
+        for ( ; cursor != NULL; cursor = cursor->next)
+        {
+            add(cursor->point);
+        }
     }
 
-    Cluster &Cluster::operator-=(const Cluster &) // (asymmetric) difference
+    Cluster &Cluster::operator-=(const Cluster &c) // (asymmetric) difference
     {
-
+        LNodePtr cursor = __points;
+        LNodePtr cursorC = c.__points;
+        while (cursor != NULL)
+        {
+            for ( ; cursorC != NULL; cursorC = cursorC->next)
+            {
+                if (cursorC->point == cursor->point)
+                    remove(cursorC->point);
+            }
+            cursor = cursor->next;
+        }
     }
 
 // Friends: IO
     std::ostream &operator<<(std::ostream &out, const Cluster &c)
     {
         LNodePtr cursor = c.__points;
-        for ( ; cursor != NULL; cursor = cursor->next)
-            out << cursor->point << endl;
+        int i=0;
+        for ( ; i<c.__size-1; i++)
+        {
+            out << cursor->point << " ";
+            cursor = cursor->next;
+        }
     }
 
     std::istream &operator>>(std::istream &in, Cluster &c)
@@ -238,6 +290,8 @@ namespace Clustering {
 // Friends: Comparison
     bool operator==(const Cluster &lhs, const Cluster &rhs)
     {
+        // Something is causing my comparisons to throw a segmentation error. So something is broken here
+        bool answer = true;
         if (lhs.__size != rhs.__size)
             return false;
 
@@ -247,7 +301,7 @@ namespace Clustering {
         {
             if (Lcursor->point != Rcursor->point )
             {
-                return false;
+                answer = false;
             }
             else
             {
@@ -255,26 +309,58 @@ namespace Clustering {
                 Lcursor = Lcursor->next;
             }
         }
-        return true;
+        return answer;
     }
 
-    bool operator!=(const Cluster &, const Cluster &) {
+    bool operator!=(const Cluster &lhs, const Cluster &rhs)
+    {
+        bool answer = false;
+        if (lhs.__size != rhs.__size)
+        {
+            answer = true;
+            return answer;
+        }
 
+        LNodePtr Lcursor = lhs.__points;
+        LNodePtr Rcursor = rhs.__points;
+        while (Lcursor != NULL)
+        {
+            if (Lcursor->point == Rcursor->point )
+            {
+                Rcursor = Rcursor->next;
+                Lcursor = Lcursor->next;
+            }
+            if (Lcursor->point != Rcursor->point)
+                answer = true;
+        }
+        return answer;
     }
 
 // Friends: Arithmetic (Cluster and Point)
-    const Cluster operator+(const Cluster &, const Point &)
+    const Cluster operator+(const Cluster &c, const Point &p)
     {
-
+        Cluster added;
+        added.__cpy(c.__points);
+        added.add(p);
+        return added;
     }
 
-    const Cluster operator-(const Cluster &, const Point &) {
-
+    const Cluster operator-(const Cluster &c, const Point &p)
+    {
+        Cluster subtracted;
+        subtracted.__cpy(c.__points);
+        subtracted.remove(p);
+        return subtracted;
     }
 
 // Friends: Arithmetic (two Clusters)
-    const Cluster operator+(const Cluster &, const Cluster &) // union
+    const Cluster operator+(const Cluster &one, const Cluster &two) // union
     {
+        Cluster allTogether;
+        allTogether.__cpy(one.__points);
+        int size = two.getSize();
+        // This isn't going to work, it will pass the first point and nothing more.
+        allTogether.add(two.__points->point);
 
     }
 

@@ -26,6 +26,7 @@ namespace Clustering {
     Point::Point(int size, double *p)
     {
         // __idGen++;
+        // THis was option for debugging.
     }
 
 // Big three: cpy ctor, overloaded operator=, dtor
@@ -97,7 +98,7 @@ namespace Clustering {
             {
                 distance += 0;
             }
-            else //(rhs.__values[i] > __values[i])
+            else
             {
                 squared = rhs.__values[i] - __values[i];
                 distance += squared * squared;
@@ -160,8 +161,7 @@ namespace Clustering {
 // Friends
     Point &operator+=(Point &lhs, const Point &rhs)
     {
-       int size = lhs.__dim;
-        for (int i=0; i < size; i++)
+        for (int i=0; i <rhs.__dim; i++)
         {
             lhs.__values[i] += rhs.__values[i];
         }
@@ -202,7 +202,7 @@ namespace Clustering {
 
     bool operator==(const Point &lhs, const Point &rhs)
     {
-       bool answer = false;
+        bool answer = false;
         if (lhs.getDims() == rhs.getDims())
         {
             int dimensions = lhs.getDims();
@@ -212,7 +212,7 @@ namespace Clustering {
                 if (lhs.__values[i] != rhs.__values[i])
                 {
                     answer = false;
-                    break;
+                    return answer;
                 }
             }
         }
@@ -222,15 +222,20 @@ namespace Clustering {
     bool operator!=(const Point &lhs, const Point &rhs)
     {
         bool answer = false;
-              int dimensions = lhs.getDims();
-            for (int i=0; i < dimensions; i++)
+        // The next line is causing a break in many of the tests with clustering but works fine in the point tests.
+        int dimensions = lhs.getDims();
+        if (lhs.__dim != rhs.__dim)
+        {
+            return answer;
+        }
+        for (int i=0; i < dimensions; i++)
+        {
+            if (lhs.__values[i] != rhs.__values[i])
             {
-                if (lhs.__values[i] != rhs.__values[i])
-                {
-                    answer = true;
-                    break;
-                }
+                answer = true;
+                break;
             }
+        }
         return answer;
     }
 
@@ -270,13 +275,13 @@ namespace Clustering {
 
     bool operator<=(const Point &lhs, const Point &rhs)
     {
-        bool answer = false;
+        bool answer = true;
         int size = lhs.__dim;
         for (int i=0; i < size; i++)
         {
-            if ( lhs.__values[i] <= rhs.__values[i])
+            if ( lhs.__values[i] > rhs.__values[i])
             {
-                answer = true;
+                answer = false;
             }
         }
         return answer;
@@ -284,13 +289,13 @@ namespace Clustering {
 
     bool operator>=(const Point &lhs, const Point &rhs)
     {
-        bool answer = false;
+        bool answer = true;
         int size = lhs.__dim;
         for (int i=0; i < size; i++)
         {
-            if ( lhs.__values[i] >= rhs.__values[i])
+            if ( lhs.__values[i] < rhs.__values[i])
             {
-                answer = true;
+                answer = false;
             }
 
         }
@@ -299,30 +304,35 @@ namespace Clustering {
 
     std::ostream &operator<<(std::ostream &out, const Point &p)
     {
-        ofstream dataOut;
-        dataOut.open("point.csv", ios::out);
-        if (!dataOut)
-            cout << "Error opening file" << endl;
+        // This is wrong but I can't make sense of how to work the heirarchy between two pages
+        int i=0;
+        for ( ; i < p.__dim-1; i++)
+        {
+            out << p.__values[i] << ', ';
+        }
+        cout << p.__values[i];
 
-        for (int i=0; i < p.__dim; i++)
-            dataOut << p.__values[i] << ' ';
-        dataOut.close();
         return out;
     }
 
     std::istream &operator>>(std::istream &in, Point &p)
     {
-        double point;
-        ifstream dataIn;
-        dataIn.open("points.csv", ios::in);
-        if (!dataIn)
-            cout << "Error opening file" << endl;
+        // this is not working either. I tried using fstream as I'm used to with outside files.
+        ifstream csv("points.csv");
+        stringstream linestream;
+        string value;
+        double d;
 
-        while (dataIn)
+        if (csv.is_open())
         {
-            dataIn >> point;
+            int i=0;
+            while (getline(linestream, value, ','))
+            {
+                d = stod(value);
+                cout << "Value: " << d << endl;
+                p.setValue(i++, d);
+            }
         }
-        dataIn.close();
 
         return in;
     }
